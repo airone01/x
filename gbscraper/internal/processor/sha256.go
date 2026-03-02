@@ -3,7 +3,6 @@ package processor
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"os"
 )
@@ -14,20 +13,23 @@ func (s *SHA256Processor) Name() string {
 	return "sha256"
 }
 
-func (s *SHA256Processor) Process(filePath string) (string, error) {
+func (s *SHA256Processor) Process(filePath string) ProcessResponse {
 	file, err := os.Open(filePath)
 	if err != nil {
-		return "", fmt.Errorf("failed to open file for hashing: %w", err)
+		return ProcessResponse{Status: "FAILED", ErrorStep: "file_open", Data: err.Error()}
 	}
 	defer file.Close()
 
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {
-		return "", fmt.Errorf("failed to calculate hash: %w", err)
+		return ProcessResponse{Status: "FAILED", ErrorStep: "hash_calc", Data: err.Error()}
 	}
 
-	hashBytes := hash.Sum(nil)
-	return hex.EncodeToString(hashBytes), nil
+	return ProcessResponse{
+		Status:    "SUCCESS",
+		ErrorStep: "",
+		Data:      hex.EncodeToString(hash.Sum(nil)),
+	}
 }
 
 // Register the processor automatically

@@ -1,0 +1,72 @@
+package processor
+
+import (
+	"archive/zip"
+	"encoding/json"
+	"io"
+	"path/filepath"
+	"strings"
+
+	"gopkg.in/yaml.v3"
+)
+
+type EverestProcessor struct{}
+
+func (e *EverestProcessor) Name() string {
+	return "everestRaw"
+}
+
+func (e *EverestProcessor) Process(filePath string) ProcessResponse {
+	if !strings.HasSuffix(strings.ToLower(filePath), ".zip") {
+		return ProcessResponse{Status: "FAILED", ErrorStep: "unsupported_archive", Data: "Not a .zip file"}
+	}
+
+	r, err := zip.OpenReader(filePath)
+	if err != nil {
+		return ProcessResponse{Status: "FAILED", ErrorStep: "archive_open", Data: err.Error()}
+	}
+	defer r.Close()
+
+	var yamlFile *zip.File
+	for _, f := range r.File {
+		if strings.ToLower(filepath.Base(f.Name)) == "everest.yaml" || strings.ToLower(filepath.Base(f.Name)) == "everest.yml" {
+			yamlFile = f
+			break
+		}
+	}
+
+	if yamlFile == nil {
+		return ProcessResponse{Status: "FAILED", ErrorStep: "missing_file", Data: "everest.yaml not found in archive"}
+	}
+
+	rc, err := yamlFile.Open()
+	if err != nil {
+		return ProcessResponse{Status: "FAILED", ErrorStep: "archive_read", Data: err.Error()}
+	}
+	defer rc.Close()
+
+	yamlBytes, err := io.ReadAll(rc)
+	if err != nil {
+		return ProcessResponse{Status: "FAILED", ErrorStep: "archive_read", Data: err.Error()}
+	}
+
+	var yamlData interface{}
+	if err := yaml.Unmarshal(yamlBytes, &yamlData); err != nil {
+		return ProcessResponse{Status: "FAILED", ErrorStep: "yaml_parse", Data: err.Error()}
+	}
+
+	jsonBytes, err := json.Marshal(yamlData)
+	if err != nil {
+		return ProcessResponse{Status: "FAILED", ErrorStep: "json_encode", Data: err.Error()}
+	}
+
+	return ProcessResponse{
+		Status:    "SUCCESS",
+		ErrorStep: "",
+		Data:      string(jsonBytes),
+	}
+}
+
+func init() {
+	Register(&EverestProcessor{})
+}

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/airone01/x/gbscraper/internal/db"
 	"github.com/airone01/x/gbscraper/internal/models"
@@ -48,6 +49,13 @@ func (wp *WorkerPool) processJob(ctx context.Context, workerID int, file models.
 	wp.Store.EnsureModExists(file.ModID)
 	wp.Store.EnsureFileExists(file)
 
+	fileInfo, err := os.Stat(tempFilePath)
+	if err == nil {
+		wp.Store.UpdateFileStats(file.ID, fileInfo.Size(), time.Now().Format(time.RFC3339))
+	} else {
+		log.Printf("[Worker %d] Warning: Could not stat file %d: %v", workerID, file.ID, err)
+	}
+
 	for _, p := range wp.Processors {
 		// idempotency check
 		processed, err := wp.Store.HasFileBeenProcessed(file.ID, p.Name())
@@ -56,16 +64,15 @@ func (wp *WorkerPool) processJob(ctx context.Context, workerID int, file models.
 			continue
 		}
 
-		resultData, err := p.Process(tempFilePath)
-		if err != nil {
-			log.Printf("[Worker %d] Processor %s failed on file %d: %v\n", workerID, p.Name(), file.ID, err)
-			continue
+		resp := p.Process(tempFilePath)
+		if resp.Status == "FAILED" {
+			log.Printf("[Worker %d] %s FAILED on %d (Step: %s) - %s\n", workerID, p.Name(), file.ID, resp.ErrorStep, resp.Data)
+		} else {
+			log.Printf("[Worker %d] %s SUCCESS on file %d\n", workerID, p.Name(), file.ID)
 		}
 
-		if err := wp.Store.SaveProcessResult(file.ID, p.Name(), resultData); err != nil {
-			log.Printf("[Worker %d] Failed to save result to DB for %d: %v\n", workerID, file.ID, err)
-		} else {
-			log.Printf("[Worker %d] Successfully saved %s for file %d\n", workerID, p.Name(), file.ID)
+		if err := wp.Store.SaveProcessResult(file.ID, p.Name(), resp.Status, resp.ErrorStep, resp.Data); err != nil {
+			log.Printf("[Worker %d] DB Save failed for %d: %v\n", workerID, file.ID, err)
 		}
 	}
 }

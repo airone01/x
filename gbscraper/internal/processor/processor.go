@@ -2,10 +2,17 @@ package processor
 
 import "fmt"
 
+// ProcessResponse standardizes the output of any post-processor.
+type ProcessResponse struct {
+	Status    string // "SUCCESS", "FAILED"
+	ErrorStep string // "unsupported_archive", "archive_open", "yaml_parse"
+	Data      string // payload or error message
+}
+
 // PostProcessor defines the contract for analyzing downloaded mod files.
 type PostProcessor interface {
 	Name() string
-	Process(filePath string) (string, error)
+	Process(filePath string) ProcessResponse
 }
 
 // Registry holds the available processors mapped by their CLI flag name.

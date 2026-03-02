@@ -5,9 +5,10 @@ import (
 	"fmt"
 
 	"encoding/json"
+	"os"
+
 	"github.com/airone01/x/gbscraper/internal/models"
 	_ "github.com/mattn/go-sqlite3"
-	"os"
 )
 
 type Store struct {
@@ -20,7 +21,6 @@ func InitDB(dbPath string) (*Store, error) {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
-	// Create tables if they don't exist
 	schema := `
 	CREATE TABLE IF NOT EXISTS mods (
 		id INTEGER PRIMARY KEY,
@@ -34,12 +34,15 @@ func InitDB(dbPath string) (*Store, error) {
 		download_url TEXT,
 		filename TEXT,
 		version TEXT,
-		FOREIGN KEY(mod_id) REFERENCES mods(id)
+		size_bytes INTEGER DEFAULT 0,
+		downloaded_at DATETIME
 	);
 
 	CREATE TABLE IF NOT EXISTS processing_results (
 		file_id INTEGER,
 		processor_name TEXT,
+		status TEXT,
+		error_step TEXT,
 		result_data TEXT,
 		PRIMARY KEY (file_id, processor_name),
 		FOREIGN KEY(file_id) REFERENCES files(id)
@@ -75,11 +78,11 @@ func (s *Store) EnsureFileExists(file models.ModFile) error {
 }
 
 // SaveProcessResult saves the output of a post-processor (like the sha256 hash).
-func (s *Store) SaveProcessResult(fileID int, processorName string, resultData string) error {
-	query := `INSERT OR REPLACE INTO processing_results (file_id, processor_name, result_data) VALUES (?, ?, ?)`
-	_, err := s.Conn.Exec(query, fileID, processorName, resultData)
+func (s *Store) SaveProcessResult(fileID int, processorName string, status string, errorStep string, resultData string) error {
+	query := `INSERT OR REPLACE INTO processing_results (file_id, processor_name, status, error_step, result_data) VALUES (?, ?, ?, ?, ?)`
+	_, err := s.Conn.Exec(query, fileID, processorName, status, errorStep, resultData)
 	if err != nil {
-		return fmt.Errorf("failed to save process result for file %d, processor %s: %w", fileID, processorName, err)
+		return fmt.Errorf("failed to save process result: %w", err)
 	}
 	return nil
 }
@@ -101,10 +104,12 @@ type ExportMod struct {
 }
 
 type ExportFile struct {
-	ID          int               `json:"id"`
-	Filename    string            `json:"filename"`
-	DownloadURL string            `json:"download_url"`
-	Results     map[string]string `json:"results"`
+	ID           int               `json:"id"`
+	Filename     string            `json:"filename"`
+	DownloadURL  string            `json:"download_url"`
+	SizeBytes    int64             `json:"size_bytes"`
+	DownloadedAt string            `json:"downloaded_at"`
+	Results      map[string]string `json:"results"`
 }
 
 // ExportToJSON reads the entire database and writes it to a formatted JSON file.
@@ -112,7 +117,7 @@ func (s *Store) ExportToJSON(outputPath string) error {
 	query := `
 		SELECT 
 			m.id, m.game_id, m.name, 
-			f.id, f.filename, f.download_url, 
+			f.id, f.filename, f.download_url, f.size_bytes, f.downloaded_at,
 			p.processor_name, p.result_data
 		FROM mods m
 		LEFT JOIN files f ON m.id = f.mod_id
@@ -129,13 +134,13 @@ func (s *Store) ExportToJSON(outputPath string) error {
 
 	for rows.Next() {
 		var (
-			modID, fileID                  sql.NullInt64
-			gameID                         sql.NullInt64
-			modName, filename, downloadURL sql.NullString
-			processorName, resultData      sql.NullString
+			modID, fileID                           sql.NullInt64
+			gameID, sizeBytes                       sql.NullInt64
+			modName, filename, downloadURL          sql.NullString
+			downloadedAt, processorName, resultData sql.NullString
 		)
 
-		if err := rows.Scan(&modID, &gameID, &modName, &fileID, &filename, &downloadURL, &processorName, &resultData); err != nil {
+		if err := rows.Scan(&modID, &gameID, &modName, &fileID, &filename, &downloadURL, &sizeBytes, &downloadedAt, &processorName, &resultData); err != nil {
 			return fmt.Errorf("failed to scan row: %w", err)
 		}
 
@@ -157,10 +162,12 @@ func (s *Store) ExportToJSON(outputPath string) error {
 			fID := int(fileID.Int64)
 			if _, exists := filesMap[fID]; !exists {
 				filesMap[fID] = &ExportFile{
-					ID:          fID,
-					Filename:    filename.String,
-					DownloadURL: downloadURL.String,
-					Results:     make(map[string]string),
+					ID:           fID,
+					Filename:     filename.String,
+					DownloadURL:  downloadURL.String,
+					SizeBytes:    sizeBytes.Int64,
+					DownloadedAt: downloadedAt.String,
+					Results:      make(map[string]string),
 				}
 			}
 
@@ -207,4 +214,10 @@ func (s *Store) writeJSON(outputPath string, modsMap map[int]*ExportMod, filesMa
 	}
 
 	return nil
+}
+
+func (s *Store) UpdateFileStats(fileID int, sizeBytes int64, downloadedAt string) error {
+	query := `UPDATE files SET size_bytes = ?, downloaded_at = ? WHERE id = ?`
+	_, err := s.Conn.Exec(query, sizeBytes, downloadedAt, fileID)
+	return err
 }
