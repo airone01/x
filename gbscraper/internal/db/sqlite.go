@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 
+	"encoding/json"
 	"github.com/airone01/x/gbscraper/internal/models"
 	_ "github.com/mattn/go-sqlite3"
+	"os"
 )
 
 type Store struct {
@@ -88,4 +90,121 @@ func (s *Store) HasFileBeenProcessed(fileID int, processorName string) (bool, er
 	query := `SELECT EXISTS(SELECT 1 FROM processing_results WHERE file_id = ? AND processor_name = ?)`
 	err := s.Conn.QueryRow(query, fileID, processorName).Scan(&exists)
 	return exists, err
+}
+
+// ExportMod represents the nested JSON structure for our export.
+type ExportMod struct {
+	ID     int          `json:"id"`
+	GameID int          `json:"game_id,omitempty"`
+	Name   string       `json:"name,omitempty"`
+	Files  []ExportFile `json:"files"`
+}
+
+type ExportFile struct {
+	ID          int               `json:"id"`
+	Filename    string            `json:"filename"`
+	DownloadURL string            `json:"download_url"`
+	Results     map[string]string `json:"results"`
+}
+
+// ExportToJSON reads the entire database and writes it to a formatted JSON file.
+func (s *Store) ExportToJSON(outputPath string) error {
+	query := `
+		SELECT 
+			m.id, m.game_id, m.name, 
+			f.id, f.filename, f.download_url, 
+			p.processor_name, p.result_data
+		FROM mods m
+		LEFT JOIN files f ON m.id = f.mod_id
+		LEFT JOIN processing_results p ON f.id = p.file_id
+	`
+	rows, err := s.Conn.Query(query)
+	if err != nil {
+		return fmt.Errorf("failed to query database for export: %w", err)
+	}
+	defer rows.Close()
+
+	modsMap := make(map[int]*ExportMod)
+	filesMap := make(map[int]*ExportFile)
+
+	for rows.Next() {
+		var (
+			modID, fileID                  sql.NullInt64
+			gameID                         sql.NullInt64
+			modName, filename, downloadURL sql.NullString
+			processorName, resultData      sql.NullString
+		)
+
+		if err := rows.Scan(&modID, &gameID, &modName, &fileID, &filename, &downloadURL, &processorName, &resultData); err != nil {
+			return fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		if !modID.Valid {
+			continue
+		}
+
+		mID := int(modID.Int64)
+		if _, exists := modsMap[mID]; !exists {
+			modsMap[mID] = &ExportMod{
+				ID:     mID,
+				GameID: int(gameID.Int64),
+				Name:   modName.String,
+				Files:  []ExportFile{},
+			}
+		}
+
+		if fileID.Valid {
+			fID := int(fileID.Int64)
+			if _, exists := filesMap[fID]; !exists {
+				filesMap[fID] = &ExportFile{
+					ID:          fID,
+					Filename:    filename.String,
+					DownloadURL: downloadURL.String,
+					Results:     make(map[string]string),
+				}
+			}
+
+			if processorName.Valid && resultData.Valid {
+				filesMap[fID].Results[processorName.String] = resultData.String
+			}
+		}
+	}
+
+	return s.writeJSON(outputPath, modsMap, filesMap)
+}
+
+// writeJSON is a helper to write the assembled maps to the file
+func (s *Store) writeJSON(outputPath string, modsMap map[int]*ExportMod, filesMap map[int]*ExportFile) error {
+	rows, err := s.Conn.Query(`SELECT id, mod_id FROM files`)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var fID, mID int
+			if err := rows.Scan(&fID, &mID); err == nil {
+				if mod, ok := modsMap[mID]; ok {
+					if file, ok := filesMap[fID]; ok {
+						mod.Files = append(mod.Files, *file)
+					}
+				}
+			}
+		}
+	}
+
+	var finalOutput []ExportMod
+	for _, mod := range modsMap {
+		finalOutput = append(finalOutput, *mod)
+	}
+
+	file, err := os.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("failed to create export file: %w", err)
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	if err := encoder.Encode(finalOutput); err != nil {
+		return fmt.Errorf("failed to encode JSON: %w", err)
+	}
+
+	return nil
 }

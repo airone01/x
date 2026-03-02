@@ -24,6 +24,6 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&dbPath, "db-path", "gb_mods.sqlite", "Path to the SQLite database file")
+	rootCmd.PersistentFlags().StringVar(&dbPath, "db-path", "db.sqlite", "Path to the SQLite database file")
 	rootCmd.PersistentFlags().IntVar(&concurrency, "concurrency", 3, "Number of concurrent mod downloads")
 }

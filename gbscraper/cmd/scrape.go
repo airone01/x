@@ -76,6 +76,9 @@ var scrapeCmd = &cobra.Command{
 			}
 
 			for _, mod := range mods {
+				query := `INSERT OR REPLACE INTO mods (id, game_id, name) VALUES (?, ?, ?)`
+				store.Conn.Exec(query, mod.ID, mod.GameID, mod.Name)
+
 				files, err := api.FetchModFiles(ctx, mod.ID)
 				if err != nil {
 					fmt.Printf("Error fetching files for Mod %d: %v\n", mod.ID, err)
@@ -100,7 +103,7 @@ var scrapeCmd = &cobra.Command{
 }
 
 func init() {
-	scrapeCmd.Flags().IntVar(&gameID, "game-id", 646, "GameBanana Game ID (Celeste = 646)")
+	scrapeCmd.Flags().IntVar(&gameID, "game-id", 6460, "GameBanana Game ID (Celeste = 6460)")
 	scrapeCmd.Flags().StringVar(&postProcess, "postprocess", "sha256", "Comma-separated list of post-processors")
 	scrapeCmd.Flags().StringVar(&tempDir, "temp-dir", os.TempDir(), "Directory for temporary downloads")
 	rootCmd.AddCommand(scrapeCmd)
