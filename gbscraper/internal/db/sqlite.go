@@ -47,6 +47,24 @@ func InitDB(dbPath string) (*Store, error) {
 		PRIMARY KEY (file_id, processor_name),
 		FOREIGN KEY(file_id) REFERENCES files(id)
 	);
+
+	CREATE TABLE IF NOT EXISTS everest_metadata (
+		file_id INTEGER,
+		everest_name TEXT,
+		version TEXT,
+		dll TEXT,
+		author TEXT,
+		PRIMARY KEY (file_id, everest_name),
+		FOREIGN KEY(file_id) REFERENCES files(id)
+	);
+
+	CREATE TABLE IF NOT EXISTS everest_dependencies (
+		file_id INTEGER,
+		everest_name TEXT,
+		dependency_name TEXT,
+		dependency_version TEXT,
+		FOREIGN KEY(file_id) REFERENCES files(id)
+	);
 	`
 
 	_, err = db.Exec(schema)
@@ -220,4 +238,32 @@ func (s *Store) UpdateFileStats(fileID int, sizeBytes int64, downloadedAt string
 	query := `UPDATE files SET size_bytes = ?, downloaded_at = ? WHERE id = ?`
 	_, err := s.Conn.Exec(query, sizeBytes, downloadedAt, fileID)
 	return err
+}
+
+// SaveEverestData takes the parsed Everest structures and inserts them into relational tables.
+func (s *Store) SaveEverestData(fileID int, metaList []models.EverestModMeta) error {
+	tx, err := s.Conn.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	metaQuery := `INSERT OR REPLACE INTO everest_metadata (file_id, everest_name, version, dll, author) VALUES (?, ?, ?, ?, ?)`
+	depQuery := `INSERT OR REPLACE INTO everest_dependencies (file_id, everest_name, dependency_name, dependency_version) VALUES (?, ?, ?, ?)`
+
+	for _, meta := range metaList {
+		_, err := tx.Exec(metaQuery, fileID, meta.Name, meta.Version, meta.DLL, meta.Author)
+		if err != nil {
+			return fmt.Errorf("failed to save metadata for %s: %w", meta.Name, err)
+		}
+
+		for _, dep := range meta.Dependencies {
+			_, err := tx.Exec(depQuery, fileID, meta.Name, dep.Name, dep.Version)
+			if err != nil {
+				return fmt.Errorf("failed to save dependency %s for %s: %w", dep.Name, meta.Name, err)
+			}
+		}
+	}
+
+	return tx.Commit()
 }

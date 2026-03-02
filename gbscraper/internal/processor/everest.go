@@ -7,13 +7,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/airone01/x/gbscraper/internal/models"
 	"gopkg.in/yaml.v3"
 )
 
 type EverestProcessor struct{}
 
 func (e *EverestProcessor) Name() string {
-	return "everestRaw"
+	return "everest"
 }
 
 func (e *EverestProcessor) Process(filePath string) ProcessResponse {
@@ -36,7 +37,7 @@ func (e *EverestProcessor) Process(filePath string) ProcessResponse {
 	}
 
 	if yamlFile == nil {
-		return ProcessResponse{Status: "FAILED", ErrorStep: "missing_file", Data: "everest.yaml not found in archive"}
+		return ProcessResponse{Status: "FAILED", ErrorStep: "missing_file", Data: "everest.yaml not found"}
 	}
 
 	rc, err := yamlFile.Open()
@@ -50,12 +51,12 @@ func (e *EverestProcessor) Process(filePath string) ProcessResponse {
 		return ProcessResponse{Status: "FAILED", ErrorStep: "archive_read", Data: err.Error()}
 	}
 
-	var yamlData interface{}
-	if err := yaml.Unmarshal(yamlBytes, &yamlData); err != nil {
+	var metaList []models.EverestModMeta
+	if err := yaml.Unmarshal(yamlBytes, &metaList); err != nil {
 		return ProcessResponse{Status: "FAILED", ErrorStep: "yaml_parse", Data: err.Error()}
 	}
 
-	jsonBytes, err := json.Marshal(yamlData)
+	jsonBytes, err := json.Marshal(metaList)
 	if err != nil {
 		return ProcessResponse{Status: "FAILED", ErrorStep: "json_encode", Data: err.Error()}
 	}

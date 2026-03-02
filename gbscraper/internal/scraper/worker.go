@@ -2,6 +2,7 @@ package scraper
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -73,6 +74,17 @@ func (wp *WorkerPool) processJob(ctx context.Context, workerID int, file models.
 
 		if err := wp.Store.SaveProcessResult(file.ID, p.Name(), resp.Status, resp.ErrorStep, resp.Data); err != nil {
 			log.Printf("[Worker %d] DB Save failed for %d: %v\n", workerID, file.ID, err)
+		}
+
+		if p.Name() == "everest" && resp.Status == "SUCCESS" {
+			var metaList []models.EverestModMeta
+			if err := json.Unmarshal([]byte(resp.Data), &metaList); err == nil {
+				if err := wp.Store.SaveEverestData(file.ID, metaList); err != nil {
+					log.Printf("[Worker %d] Failed to save relational Everest data for %d: %v\n", workerID, file.ID, err)
+				}
+			} else {
+				log.Printf("[Worker %d] Failed to decode Everest JSON for routing: %v\n", workerID, err)
+			}
 		}
 	}
 }
