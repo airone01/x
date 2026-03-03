@@ -267,3 +267,67 @@ func (s *Store) SaveEverestData(fileID int, metaList []models.EverestModMeta) er
 
 	return tx.Commit()
 }
+
+// NixModVersion groups all the data needed to generate a single version block in Nix.
+type NixModVersion struct {
+	Version      string
+	DownloadURL  string
+	SHA256       string
+	Dependencies []models.EverestDependency
+}
+
+// GetNixModData retrieves all versions and dependencies for a specific Everest mod name.
+func (s *Store) GetNixModData(everestName string) (map[string]NixModVersion, error) {
+	query := `
+		SELECT m.file_id, m.version, f.download_url, p.result_data
+		FROM everest_metadata m
+		JOIN files f ON m.file_id = f.id
+		JOIN processing_results p ON f.id = p.file_id AND p.processor_name = 'sha256'
+		WHERE LOWER(m.everest_name) = LOWER(?)
+	`
+	rows, err := s.Conn.Query(query, everestName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query mod data: %w", err)
+	}
+	defer rows.Close()
+
+	versions := make(map[string]NixModVersion)
+	fileIDs := make(map[int]string)
+
+	for rows.Next() {
+		var fileID int
+		var version, url, sha256 string
+		if err := rows.Scan(&fileID, &version, &url, &sha256); err != nil {
+			return nil, err
+		}
+
+		versions[version] = NixModVersion{
+			Version:     version,
+			DownloadURL: url,
+			SHA256:      sha256,
+		}
+		fileIDs[fileID] = version
+	}
+
+	depQuery := `SELECT file_id, dependency_name, dependency_version FROM everest_dependencies WHERE LOWER(everest_name) = LOWER(?)`
+	depRows, err := s.Conn.Query(depQuery, everestName)
+	if err == nil {
+		defer depRows.Close()
+		for depRows.Next() {
+			var fID int
+			var dName, dVer string
+			if err := depRows.Scan(&fID, &dName, &dVer); err == nil {
+				if verStr, exists := fileIDs[fID]; exists {
+					v := versions[verStr]
+					v.Dependencies = append(v.Dependencies, models.EverestDependency{
+						Name:    dName,
+						Version: dVer,
+					})
+					versions[verStr] = v
+				}
+			}
+		}
+	}
+
+	return versions, nil
+}
