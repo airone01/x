@@ -52,6 +52,9 @@
     "system_tooling/isod": {
       "release-type": "simple"
     },
+    "theming/zmono": {
+      "release-type": "simple"
+    },
     "webapps/instanc.es": {
       "release-type": "node"
     }

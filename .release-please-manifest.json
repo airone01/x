@@ -18,5 +18,6 @@
   "system_tooling/isod": "1.0.0",
   "webapps/instanc.es": "1.0.0",
   "packaging/celeste_flake": "1.0.0",
+  "theming/zmono": "0.0.0",
   "packaging/snowblock": "1.0.0"
 }
