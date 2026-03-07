@@ -54,7 +54,7 @@
     "@types/react-dom": "^18.3.0",
     "alpinejs": "^3.14.0",
     "animejs": "^3.2.2",
-    "astro": "4.12.1",
+    "astro": "5.15.9",
     "astro-icon": "^1.1.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
