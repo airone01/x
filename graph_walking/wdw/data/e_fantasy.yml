@@ -1,0 +1,27 @@
+- id: start
+  title: "Start quest"
+
+- id: find_sword
+  title: "Find the sword"
+  requirement: start
+
+- id: rescue_villager
+  title: "Rescue the villager"
+  requirement:
+    type: or
+    value:
+      - find_sword
+      - secret_key
+
+- id: secret_key
+  title: "Find the secret key"
+  requirement: start
+
+- id: final_boss
+  title: "Fight the final boss"
+  requirement:
+    type: and
+    value:
+      - rescue_villager
+      - find_sword
+

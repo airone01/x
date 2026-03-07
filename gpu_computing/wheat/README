@@ -1,0 +1,17 @@
+wheat
+=====
+
+A Vulkan GPU Minecraft seed miner.
+
+Description
+-----------
+
+The code is of really bad quality, and I'm new to how GPU work. You have been warned.
+
+Objectives
+----------
+
+* Make it configurable, but before all figure out exactly how to do that.
+  * Maybe compiling a custom app for every use of it? Zig could help with that.
+* Clean the code and make it modular
+

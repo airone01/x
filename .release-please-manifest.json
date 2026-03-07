@@ -1,0 +1,20 @@
+{
+  "content_generation/readme_diy": "0.0.0",
+  "emulation/zmu": "0.0.0",
+  "gpu_computing/vulkan-zig": "0.0.0",
+  "gpu_computing/wheat": "0.0.0",
+  "gpu_computing/zig_tests": "0.0.0",
+  "graph_walking/wdw": "0.0.0",
+  "node_tooling/silo": "0.0.0",
+  "packaginx/celeste_flake": "0.0.0",
+  "packaginx/snowblock": "0.0.0",
+  "portfolios/portfolio": "0.0.0",
+  "portfolios/portfolio2": "0.0.0",
+  "portfolios/portfolio3": "0.0.0",
+  "portfolios/portfolio4": "0.0.0",
+  "portfolios/portfolio5-svelte": "0.0.0",
+  "scraping/gbscraper": "0.0.0",
+  "scraping/gbscraper_old": "0.0.0",
+  "system_tooling/isod": "0.0.0",
+  "webapps/instanc.es": "0.0.0"
+}

@@ -1,0 +1,59 @@
+---
+import BaseHead from "../components/BaseHead.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import SkillsDemo from "../components/SkillsDemo.astro";
+import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
+
+import { HeroHighlight } from "@/components/ui/hero-highlight";
+import { LinkPreview } from "@/components/ui/link-preview";
+---
+
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+  </head>
+  <body class="w-full min-h-full flex flex-col items-center">
+    <Header />
+
+    <!-- Main content -->
+    <main class="flex flex-col items-center h-full w-full container pr-12">
+      <section class="w-full h-full">
+        <HeroHighlight
+          className="absolute top-0 left-0 h-full w-full flex flex-col justify-center items-center"
+          client:load
+        >
+          <!-- Radian gradient -->
+          <div class="absolute top-0 left-0 h-full w-full bg-radial-gradient">
+          </div>
+          <!-- Cool title -->
+          <div class="flex flex-col justify-center items-center z-10">
+            <h1>Welcome to my humble abode</h1>
+            <p>
+              Bonjour! Je m'appelle Erwann, et je suis un développeur junior
+              avec une passion pour la créativité et les solutions aui
+              simplifient la vie des gens. J'ai récement fini un stage, puis une
+              alternance à
+              {" "}
+              <LinkPreview
+                client:load
+                url="https://www.spie.com/spie-france"
+                className="underline">Spie CityNetworks</LinkPreview
+              >, et compte continuer mes études après les vacances. Pour en
+              savoir plus, rendez-vous sur <LinkPreview
+                client:load
+                url="blog/fr-spie-cn/"
+                className="underline">mon blog</LinkPreview
+              >.
+            </p>
+          </div>
+        </HeroHighlight>
+      </section>
+      <div class="grid">
+        <SkillsDemo />
+      </div>
+      <Footer />
+    </main>
+  </body>
+</html>

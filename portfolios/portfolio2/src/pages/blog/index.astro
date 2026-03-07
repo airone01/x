@@ -1,0 +1,108 @@
+---
+import { getCollection } from "astro:content";
+import BaseHead from "../../components/BaseHead.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import FormattedDate from "../../components/FormattedDate.astro";
+import { SITE_TITLE, SITE_DESCRIPTION } from "../../consts";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+const posts = (await getCollection("blog")).sort(
+  (a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf(),
+);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+  </head>
+  <body class="pr-16">
+    <Header />
+
+    <main>
+      <div class="pt-4 flex justify-center items-center">
+        <section class="container flex flex-wrap gap-4 justify-center p-4">
+          {
+            posts.map((post) => (
+              <a class="max-w-sm w-full" href={`/blog/${post.slug}/`}>
+                <Card
+                  className={cn(
+                    "group w-full cursor-pointer overflow-hidden relative card h-96 rounded-md shadow-xl mx-auto flex flex-col justify-end p-4 border",
+                    `bg-[url(${post.data.heroImage})] bg-cover`,
+                    // Preload hover image by setting it in a pseudo-element
+                    "before:bg-[url(https://media1.tenor.com/m/14tctLeQlj8AAAAC/highway-chrissy-metz.gif)] before:fixed before:inset-0 before:opacity-0 before:z-[-1]",
+                    "hover:bg-[url(https://media1.tenor.com/m/14tctLeQlj8AAAAC/highway-chrissy-metz.gif)]",
+                    "hover:after:content-[''] hover:after:absolute hover:after:inset-0 hover:after:bg-black hover:after:opacity-50",
+                    "transition-all duration-500",
+                  )}
+                >
+                  <CardHeader className="text-background">
+                    <CardTitle className="text-slate-200">
+                      {post.data.title}
+                    </CardTitle>
+                    <CardDescription>
+                      <FormattedDate date={post.data.pubDate} />
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent />
+                  {/* <Image
+                    alt="Blog post's hero image"
+                    height="360"
+                    width="720"
+                    src={post.data.heroImage ?? ""}
+                    class="h-56 w-full rounded-xl object-cover shadow-xl transition"
+                  />
+
+                  <div>
+                    <a
+                      href={`/blog/${post.slug}/`}
+                      class="flex flex-col gap-2 whitespace-nowrap"
+                    >
+                      <span class="text-sm/relaxed text-gray-500" />
+                    </a>
+                  </div> */}
+                </Card>
+              </a>
+
+              // <li>
+              //   <a href={`/blog/${post.slug}/`}>
+              //     <img
+              //       width={720}
+              //       height={360}
+              //       src={post.data.heroImage}
+              //       alt=""
+              //     />
+              //     <h4 class="title">{post.data.title}</h4>
+              //     <p class="date">
+              //       <FormattedDate date={post.data.pubDate} />
+              //     </p>
+              //   </a>
+              // </li>
+            ))
+          }
+        </section>
+      </div>
+    </main>
+    <Footer />
+
+    <!-- Wallpapers (for Tailwind detection) -->
+    <div
+      class="h-0 w-0 hidden bg-[url(https://images.unsplash.com/photo-1534379123277-8853f132516f)]"
+    >
+      <div
+        class="h-0 w-0 hidden bg-[url(https://images.unsplash.com/photo-1496044654355-e8102baadbf4)]"
+      >
+      </div>
+      <div class="h-0 w-0 hidden bg-[url(https://i.imgur.com/2lHK6eH.jpeg)]">
+      </div>
+    </div>
+  </body>
+</html>

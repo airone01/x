@@ -1,0 +1,73 @@
+---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import BaseHead from "../../components/BaseHead.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import { SITE_TITLE, SITE_DESCRIPTION } from "../../consts";
+
+// Sort alphabetically by title
+const posts = (await getCollection("projects")).sort((a, b) =>
+  a.data.title.localeCompare(b.data.title),
+);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+  </head>
+  <body class="pr-16">
+    <Header />
+
+    <main>
+      <div class="pt-4 flex justify-center items-center">
+        <section
+          class="container grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 gap-4 p-4"
+        >
+          {
+            posts.map((post) => (
+              <article class="group">
+                <Image
+                  alt="Blog post's hero image"
+                  height="360"
+                  width="720"
+                  src={post.data.heroImage ?? ""}
+                  class="h-56 w-full rounded-xl object-cover shadow-xl transition group-hover:grayscale-[50%]"
+                />
+
+                <div>
+                  <a
+                    href={`/projects/${post.slug}/`}
+                    class="flex flex-col gap-2 whitespace-nowrap"
+                  >
+                    <h3 class="text-lg font-medium">{post.data.title}</h3>
+                    <span class="text-sm/relaxed text-gray-500">
+                      {post.data.description}
+                    </span>
+                  </a>
+                </div>
+              </article>
+
+              // <li>
+              //   <a href={`/blog/${post.slug}/`}>
+              //     <img
+              //       width={720}
+              //       height={360}
+              //       src={post.data.heroImage}
+              //       alt=""
+              //     />
+              //     <h4 class="title">{post.data.title}</h4>
+              //     <p class="date">
+              //       <FormattedDate date={post.data.pubDate} />
+              //     </p>
+              //   </a>
+              // </li>
+            ))
+          }
+        </section>
+      </div>
+    </main>
+    <Footer />
+  </body>
+</html>

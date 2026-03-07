@@ -1,0 +1,165 @@
+#version 450
+/**
+ * MINECRAFT SEED SIEVE v3 (FIXED)
+ * Features:
+ * - Slime Chunks
+ * - End Portal Eyes (Static Coords)
+ * - Stronghold Search (Dynamic Coords / Placement Check)
+ */
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+layout(local_size_x = 256) in;
+
+// --- CONSTANTS ---
+const uint COND_SLIME_CHUNK = 0;
+const uint COND_END_PORTAL_STATIC = 1; 
+const uint COND_STRONGHOLD_SEARCH = 2; 
+
+const int64_t MUL = 0x5DEECE66DL;
+const int64_t ADD = 0xBL;
+const int64_t MASK = 0xFFFFFFFFFFFFL; 
+const double PI = 3.141592653589793;
+
+struct Condition {
+    uint kind;
+    int x;
+    int z;
+    int param; 
+};
+
+struct FoundSeed {
+    int64_t seed; // 8 bytes
+    int x;        // 4 bytes
+    int z;        // 4 bytes
+}; // Total 16 bytes. Perfect.
+
+layout(std430, binding = 0) buffer ResultBuffer {
+    uint count;
+    uint _pad0;
+    uint _pad1;
+    uint _pad2;
+    // By having 4 uints (4*4=16 bytes), the array starts 
+    // exactly at the 16-byte boundary.
+    FoundSeed results[]; 
+} output_data;
+
+layout(std430, binding = 1) readonly buffer FilterBuffer {
+    uint condition_count;
+    uint _padding[3];
+    Condition conditions[];
+} filter_config;
+
+layout(push_constant) uniform PushConsts {
+    int64_t base_seed;
+} push;
+
+// --- JAVA RANDOM HELPERS ---
+
+// FIX: Changed int32_t to int (standard GLSL 32-bit signed int)
+int next(inout int64_t state, int bits) {
+    state = (state * MUL + ADD) & MASK;
+    return int(uint64_t(state) >> (48 - bits));
+}
+
+// Java's nextFloat(): returns [0, 1)
+float javaNextFloat(inout int64_t state) {
+    return float(next(state, 24)) / 16777216.0;
+}
+
+// Java's nextDouble()
+double javaNextDouble(inout int64_t state) {
+    // FIX: Changed int32_t to int
+    int high = next(state, 26);
+    int low  = next(state, 27);
+    int64_t combined = (int64_t(high) << 27) + int64_t(low);
+    return double(combined) / double(1L << 53);
+}
+
+int countPortalEyes(int64_t world_seed, int x, int z) {
+    const int64_t STRONGHOLD_SALT = 10387320L;
+    // The portal room's RNG is based on its own chunk coordinates
+    int64_t seed = (int64_t(x) * 341873128712L) + (int64_t(z) * 132897987541L);
+    seed += world_seed;
+    seed += STRONGHOLD_SALT;
+    seed = (seed ^ MUL) & MASK;
+
+    int eyes = 0;
+    for(int i=0; i<12; i++) {
+        // replicating exact Java nextFloat behavior
+        seed = (seed * MUL + ADD) & MASK;
+        float f = float(uint64_t(seed) >> 24) / 16777216.0;
+        if (f > 0.9) eyes++;
+    }
+    return eyes;
+}
+
+// --- LOGIC: SLIME ---
+bool checkSlimeChunk(int64_t world_seed, int x, int z) {
+    int64_t xx = int64_t(x);
+    int64_t zz = int64_t(z);
+    int64_t offset = (xx * xx * 4987142L) + (xx * 5947611L) + (zz * zz * 4392871L) + (zz * 389711L);
+    int64_t seed = (world_seed + offset) ^ 987234911L;
+    
+    seed = (seed ^ MUL) & MASK;
+    seed = (seed * MUL + ADD) & MASK;
+    return (uint64_t(seed) >> 17) % 10 == 0;
+}
+
+bool searchRing1(int64_t world_seed, int min_eyes, out int foundX, out int foundZ) {
+    int64_t state = (world_seed ^ MUL) & MASK;
+    double d0 = javaNextDouble(state) * PI * 2.0; 
+    
+    for (int i = 0; i < 3; i++) {
+        double wiggle = (javaNextDouble(state) - 0.5) * 2.5; 
+        double dist = 80.0 + (wiggle * 16.0); 
+
+        // Placement start coord
+        int startX = int(floor(cos(float(d0)) * float(dist)));
+        int startZ = int(floor(sin(float(d0)) * float(dist)));
+        
+        // SCAN WINDOW: The portal room can be anywhere near the start.
+        // We scan a 7x7 chunk area around the start point.
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                if (countPortalEyes(world_seed, startX + dx, startZ + dz) >= min_eyes) {
+                    foundX = startX + dx;
+                    foundZ = startZ + dz;
+                    return true;
+                }
+            }
+        }
+
+        d0 += (PI * 2.0) / 3.0;
+    }
+    return false;
+}
+
+void main() {
+    int64_t gid = int64_t(gl_GlobalInvocationID.x);
+    int64_t seed = push.base_seed + gid;
+    bool match = true;
+    int outX = 0;
+    int outZ = 0;
+
+    for (uint i = 0; i < filter_config.condition_count; i++) {
+        Condition req = filter_config.conditions[i];
+        
+        if (req.kind == COND_SLIME_CHUNK) {
+            if (!checkSlimeChunk(seed, req.x, req.z)) { match = false; break; }
+            outX = req.x; outZ = req.z; // for slime, coords are input
+        }
+        else if (req.kind == COND_STRONGHOLD_SEARCH) {
+            if (!searchRing1(seed, req.param, outX, outZ)) { match = false; break; }
+        }
+        else { match = false; break; }
+    }
+
+    if (match) {
+        uint idx = atomicAdd(output_data.count, 1);
+        if (idx < 1024) {
+            output_data.results[idx].seed = seed;
+            output_data.results[idx].x = outX;
+            output_data.results[idx].z = outZ;
+        }
+    }
+}

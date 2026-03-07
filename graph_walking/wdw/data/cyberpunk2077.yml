@@ -1,0 +1,354 @@
+################################################################################
+#                                   SPECIAL                                    #
+################################################################################
+
+- id: s_new_game
+  title: "New save"
+
+# Gender (voice tone)
+- id: s_female
+  title: "Female V"
+  requirement: s_new_game
+- id: s_male
+  title: "Male V"
+  requirement: s_new_game
+
+# Lifepath
+- id: s_lp_nomad
+  title: "Lifepath: Nomad"
+  requirement:
+    - s_new_game
+    - "!s_lp_corpo"
+    - "!s_lp_streetkid"
+- id: s_lp_streetkid
+  title: "Lifepath: Streetkid"
+  requirement:
+    - s_new_game
+    - "!s_lp_nomad"
+    - "!s_lp_corpo"
+- id: s_lp_corpo
+  title: "Lifepath: Corpo"
+  requirement:
+    - s_new_game
+    - "!s_lp_streetkid"
+    - "!s_lp_nomad"
+
+- id: s_die_cinematic
+  title: "V dies (in a cinematic or quest)"
+  requirement_or:
+    - c_the_pickup_pay_timeout
+
+################################################################################
+#                                  MAIN JOBS                                   #
+################################################################################
+
+################################### Prologue ###################################
+################################################################################
+
+- id: s_prologue
+  title: "PROLOGUE STARTS"
+  requirement:
+    - or: # gender
+        - s_female
+        - s_male
+    - or: # lifepath
+        - s_lp_nomad
+        - s_lp_streetkid
+        - s_lp_corpo
+
+- id: mj_the_nomad
+  title: "The Nomad"
+  requirement:
+    - s_prologue
+    - s_lp_nomad
+- id: mj_the_streetkid
+  title: "The Streetkid"
+  requirement:
+    - s_prologue
+    - s_lp_streetkid
+- id: mj_the_corpo_rat
+  title: "The Corpo Rat"
+  requirement:
+    - s_prologue
+    - s_lp_corpo
+
+#################################### Act 1 #####################################
+################################################################################
+
+- id: s_act_1
+  title: "ACT 1 STARTS"
+  requirement:
+    type: or
+    value:
+      - mj_the_nomad
+      - mj_the_streetkid
+      - mj_the_corpo_rat
+
+- id: mj_practice_makes_perfect
+  title: "Practice Makes Perfect (tutorial)"
+  requirement: s_act_1
+- id: mj_the_rescue
+  title: "The Rescue"
+  requirement: s_act_1
+- id: mj_the_ripperdoc
+  title: "The Ripperdoc"
+  requirement: mj_the_rescue
+- id: mj_the_ride
+  title: "The Ride"
+  requirement: mj_the_ripperdoc
+- id: mj_the_information
+  title: "The Information"
+  requirement: mj_the_ride
+
+############################## Act 1: The Pickup ###############################
+################################################################################
+- id: c_the_pickup_start
+  title: "The Pickup: (start of job)"
+  requirement: mj_the_ride
+
+- id: c_the_pickup_meet_stout
+  title: "The Pickup: V meets Meredith Stout"
+  requirement: c_the_pickup_start
+- id: c_the_pickup_accept_offer
+  title: "The Pickup: V accepts the infected chip"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_meet_stout
+      - type: not
+        value:
+          - c_the_pickup_decline_offer
+- id: c_the_pickup_decline_offer
+  title: "The Pickup: V declines the infected chip"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_meet_stout
+      - type: not
+        value:
+          - c_the_pickup_accept_offer
+- id: c_the_pickup_remove_daemon
+  title: "The Pickup: V removes the daemon from the infected chip"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_accept_offer
+      - type: not
+        value:
+          - c_the_pickup_leave_daemon
+- id: c_the_pickup_leave_daemon
+  title: "The Pickup: V leaves the daemon on the infected chip"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_accept_offer
+      - type: not
+        value:
+          - c_the_pickup_remove_daemon
+
+- id: c_the_pickup_meet_jackie
+  title: "The Pickup: (V meets Jackie outside the All Foods Plant)"
+  requirement: c_the_pickup_start
+- id: c_the_pickup_comment_motorcycle
+  title: "The Pickup: V comments on Jackie's ARCH"
+  requirement:
+    type: and
+    value:
+      - s_lp_nomad
+      - c_the_pickup_meet_jackie
+
+- id: c_the_pickup_meet_dum_dum
+  title: "The Pickup: (V enters the All Foods Plant and meets Dum Dum)"
+  requirement: c_the_pickup_meet_jackie
+# The Pickup: Atacking straight away (or anytime)
+- id: c_the_pickup_attack_maelstrom_straight_away
+  title: "V points a weapon at or attacks Maelstrom"
+  requirement: c_the_pickup_meet_dum_dum
+# The Pickup: Jackie not wanting to sit
+- id: c_the_pickup_jackie_sits_down
+  title: "The Pickup: V asks Jackie to sit down"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_meet_dum_dum
+      - type: not
+        value:
+          - c_the_pickup_fight_maelstrom
+- id: c_the_pickup_jackie_picks_a_fight
+  title: "The Pickup: Jackie doesn't sit down and picks a fight with Maelstrom"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_meet_jackie
+      - type: not
+        value:
+          - c_the_pickup_jackie_sits_down
+# The Pickup: paying Maelstrom
+- id: c_the_pickup_pay_timeout
+  title: "The Pickup: V takes too long to reply to Royce when he asks how they are going to pay and is shot in the head by Royce"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_jackie_sits_down
+      - type: not
+        value:
+          - c_the_pickup_pay_infected_chip
+          - c_the_pickup_pay_own_money
+          - c_the_pickup_kill_royce_early
+          - c_the_pickup_pay_decrypted_chip
+- id: c_the_pickup_pay_infected_chip
+  title: "The Pickup: V pays with the infected chip"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_jackie_sits_down
+      - c_the_pickup_leave_daemon
+      - type: not
+        value:
+          - c_the_pickup_pay_timeout
+          - c_the_pickup_pay_own_money
+          - c_the_pickup_kill_royce_early
+          - c_the_pickup_pay_decrypted_chip
+- id: c_the_pickup_pay_decrypted_chip
+  title: "The Pickup: V pays with the decrypted chip"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_jackie_sits_down
+      - c_the_pickup_remove_daemon
+      - type: not
+        value:
+          - c_the_pickup_pay_timeout
+          - c_the_pickup_pay_own_money
+          - c_the_pickup_kill_royce_early
+          - c_the_pickup_pay_infected_chip
+- id: c_the_pickup_pay_own_money
+  title: "The Pickup: V pays with their own money"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_jackie_sits_down
+      - type: not
+        value:
+          - c_the_pickup_pay_timeout
+          - c_the_pickup_pay_infected_chip
+          - c_the_pickup_kill_royce_early
+          - c_the_pickup_pay_decrypted_chip
+- id: c_the_pickup_kill_royce_early
+  title: "The Pickup: V kills Royce in the negociation room"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_jackie_sits_down
+      - type: not
+        value:
+          - c_the_pickup_pay_timeout
+          - c_the_pickup_pay_infected_chip
+          - c_the_pickup_pay_own_money
+          - c_the_pickup_pay_decrypted_chip
+# note: lacking the option here to give spiked chip with a heads-up, specific to corpo
+# Fighting Maelstrom, or fighting alongside Millitech, or peaceful
+- id: c_the_pickup_fight_maelstrom
+  title: "The Pickup: (Jackie and V fight Maelstrom)"
+  requirement:
+    type: or
+    value:
+      - c_the_pickup_attack_maelstrom_straight_away
+      - c_the_pickup_jackie_picks_a_fight
+      - c_the_pickup_pay_infected_chip
+      - c_the_pickup_kill_royce_early
+- id: c_the_pickup_side_with_millitech
+  title: "The Pickup: (Jackie and V side with Millitech)"
+  requirement:
+    type: or
+    value:
+      - c_the_pickup_pay_decrypted_chip
+      - c_the_pickup_pay_own_money
+- id: c_the_pickup_peaceful_route
+  title: "The Pickup: (Jackie and V obtain the flathead peacefully)"
+  requirement: c_the_pickup_pay_own_money
+- id: c_the_pickup_escape
+  title: "The Pickup: (Jackie and V fight or sneak to escape the All Foods Plant)"
+  requirement:
+    type: and
+    value:
+      - type: or
+        value:
+          - c_the_pickup_fight_maelstrom
+          - c_the_pickup_side_with_millitech
+      - type: not
+        value:
+          - c_the_pickup_peaceful_route
+# Peaceful route consequences
+- id: c_the_pickup_obtain_black_lace
+  title: "The Pickup: (Dum Dum gifts the Black Lace to V)"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_peaceful_route
+      - s_lp_streetkid
+- id: c_the_pickup_maelstrom_vendor
+  title: "The Pickup: (the Maelstrom vendor is unlocked)"
+  requirement: c_the_pickup_peaceful_route
+- id: c_the_pickup_find_mole
+  title: "The Pickup: V finds the mole identity in a side room when escaping"
+  requirement: c_the_pickup_escape
+# Brick
+- id: c_the_pickup_brick_leave
+  title: "The Pickup: V does not kill Brick nor free him"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_escape
+      - type: not
+        value:
+          - c_the_pickup_brick_kill
+          - c_the_pickup_brick_free
+- id: c_the_pickup_brick_kill
+  title: "The Pickup: V kills Brick"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_escape
+      - type: not
+        value:
+          - c_the_pickup_brick_leave
+          - c_the_pickup_brick_free
+- id: c_the_pickup_brick_free
+  title: "The Pickup: V frees Brick"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_escape
+      - type: not
+        value:
+          - c_the_pickup_brick_kill
+          - c_the_pickup_brick_leave
+# Royce and Dum Dum
+- id: c_the_pickup_royce_dies
+  title: "The Pickup: (Royce dies)"
+  requirement:
+    type: or
+    value:
+      - c_the_pickup_kill_royce_earl  y
+- id: c_the_pickup_dum_dum_survives
+  title: "The Pickup: Dum Dum survives"
+  requirement:
+    type: and
+    value:
+      - c_the_pickup_side_with_millitech
+      - c_the_pickup_escape
+
+- id: mj_the_pickup
+  title: "The Pickup: (end of job)"
+  requirement: mj_the_ride
+
+########################### Act 1: The Pickup (end) ############################
+
+################################################################################
+#                              STASH WALL WEAPONS                              #
+################################################################################
+
+- id: i_st_chaos
+  title: "Chaos"
+  requirement: c_the_pickup_royce_dies

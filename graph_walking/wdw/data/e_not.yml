@@ -1,0 +1,16 @@
+# Order priorities befriend_bandits, but we are
+# excluding it using `type: not`, so order should be:
+# - kill_bandits
+# - save_princess
+# - royal_knighthood
+- id: befriend_bandits
+- id: kill_bandits
+- id: save_princess
+  requirement: kill_bandits
+- id: royal_knighthood
+  requirement:
+    type: and
+    value:
+      - save_princess
+      - { type: not, value: [befriend_bandits] }
+

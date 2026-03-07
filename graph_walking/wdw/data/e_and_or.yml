@@ -1,0 +1,32 @@
+# Best path should be
+# - A
+# - X (or Y)
+# - Y (or X)
+# - E (fin!)
+
+- id: A
+- id: B
+  requirement: A
+- id: C
+  # reqs simplifies as just B
+  requirement:
+    type: and
+    value:
+      - A
+      - B
+- id: D
+  requirement: C
+- id: X
+  requirement: A
+- id: Y
+  requirement: A
+- id: E
+  requirement:
+    type: or
+    value:
+      - type: and
+        value:
+          - X
+          - Y
+      - D
+

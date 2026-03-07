@@ -1,0 +1,59 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    "content_generation/readme_diy": {
+      "release-type": "simple"
+    },
+    "emulation/zmu": {
+      "release-type": "simple"
+    },
+    "gpu_computing/vulkan-zig": {
+      "release-type": "simple"
+    },
+    "gpu_computing/wheat": {
+      "release-type": "simple"
+    },
+    "gpu_computing/zig_tests": {
+      "release-type": "simple"
+    },
+    "graph_walking/wdw": {
+      "release-type": "simple"
+    },
+    "node_tooling/silo": {
+      "release-type": "node"
+    },
+    "packaging/celeste_flake": {
+      "release-type": "simple"
+    },
+    "packaging/snowblock": {
+      "release-type": "simple"
+    },
+    "portfolios/portfolio": {
+      "release-type": "simple"
+    },
+    "portfolios/portfolio2": {
+      "release-type": "simple"
+    },
+    "portfolios/portfolio3": {
+      "release-type": "simple"
+    },
+    "portfolios/portfolio4": {
+      "release-type": "simple"
+    },
+    "portfolios/portfolio5-svelte": {
+      "release-type": "node"
+    },
+    "scraping/gbscraper": {
+      "release-type": "simple"
+    },
+    "scraping/gbscraper_old": {
+      "release-type": "simple"
+    },
+    "system_tooling/isod": {
+      "release-type": "simple"
+    },
+    "webapps/instanc.es": {
+      "release-type": "node"
+    }
+  }
+}

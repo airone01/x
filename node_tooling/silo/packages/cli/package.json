@@ -1,0 +1,21 @@
+{
+  "name": "cli",
+  "module": "index.ts",
+  "type": "module",
+  "private": "true",
+  "dependencies": {
+    "@inquirer/prompts": "^5.4.0",
+    "@might/fail": "npm:@jsr/might__fail",
+    "chalk": "^5.3.0",
+    "clui": "^0.3.6",
+    "configstore": "^7.0.0",
+    "meow": "^13.2.0",
+    "typeglide": "^1.2.3",
+    "yargs": "^17.7.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/clui": "^0.3.4",
+    "@types/configstore": "^6.0.2"
+  }
+}

@@ -1,0 +1,42 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { Icon } from "astro-icon/components";
+
+type Props = HTMLAttributes<"a"> & {
+  name: string;
+  fullName: string;
+  colorClassBg: string;
+  colorClassFg: string;
+};
+const {
+  href,
+  class: className,
+  colorClassBg,
+  colorClassFg,
+  name,
+  fullName,
+  ...props
+} = Astro.props;
+---
+
+<a
+  href={href}
+  class="w-8 h-8 *:transition-all *:duration-300 relative group tooltip"
+  aria-label={fullName}
+  data-tip={fullName}
+  rel="noopener noreferrer"
+  {...props}
+>
+  <Icon
+    class:list={[
+      "w-full h-full hover absolute blur opacity-0 group-hover:opacity-75",
+      colorClassBg,
+      className,
+    ]}
+    name={name}
+  />
+  <Icon
+    class:list={["w-full h-full absolute", colorClassFg, className]}
+    name={name}
+  />
+</a>

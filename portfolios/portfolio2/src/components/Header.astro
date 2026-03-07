@@ -1,0 +1,96 @@
+---
+import { ModeToggle } from "./ui/mode-toggle";
+import { Button } from "./ui/button";
+import HeaderLink from "./HeaderLink.astro";
+import { SITE_TITLE } from "../consts";
+import { Icon } from "astro-icon/components";
+---
+
+<!-- Small colors banner -->
+<div class="fixed w-full z-50">
+  <div class="w-full h-2 bg-[#8E7AB5]"></div>
+  <div class="w-full h-1.5 bg-[#B784B7]"></div>
+  <div class="w-full h-1 bg-[#E493B3]"></div>
+  <div class="w-full h-1 bg-[#EEA5A6]"></div>
+</div>
+
+<header
+  id="header-container"
+  class="fixed top-0 right-0 mt-6 w-fit flex flex-col justify-center items-center bg-background border-l border-secondary overflow-hidden"
+>
+  <!-- Title in bg -->
+  <h1
+    class="rotate-90 opacity-20 absolute text-nowrap align-bottom -translate-x-1 -z-10 uppercase tracking-widest"
+  >
+    {SITE_TITLE}
+  </h1>
+
+  <nav
+    id="header-nav"
+    class="min-h-[calc(100vh-32px)] max-h-[100vh-64px] flex flex-col justify-between items-center w-full mx-1"
+  >
+    <!-- Top -->
+    <section class="bg-100-500 w-full">
+      <div
+        class="gap-2 w-full flex flex-col justify-between items-center pt-1 bg-background"
+      >
+        <ModeToggle client:load />
+      </div>
+      <div
+        class="bg-gradient-to-t from-transparent via-background/75 to-background h-16 w-full"
+      >
+      </div>
+    </section>
+
+    <!-- Middle -->
+    <section class="flex flex-col w-full">
+      <div
+        class="bg-gradient-to-b from-transparent via-background/75 to-background h-16"
+      >
+      </div>
+      <div
+        class="flex flex-col gap-2 bg-background justify-center items-center"
+      >
+        <HeaderLink href="/" aria-label="Home">
+          <Icon
+            class="w-[1.2rem] h-[1.2rem] transition-all"
+            name="lucide:home"
+          />
+        </HeaderLink>
+        <HeaderLink href="/blog" aria-label="Blog">
+          <Icon
+            class="w-[1.2rem] h-[1.2rem] transition-all"
+            name="lucide:notebook-pen"
+          />
+        </HeaderLink>
+        <HeaderLink href="/about" aria-label="Info">
+          <Icon
+            class="w-[1.2rem] h-[1.2rem] transition-all"
+            name="lucide:info"
+          />
+        </HeaderLink>
+      </div>
+      <div
+        class="bg-gradient-to-t from-transparent via-background/75 to-background h-16"
+      >
+      </div>
+    </section>
+
+    <!-- Bottom -->
+    <section class="flex flex-col justify-center items-center w-full">
+      <div
+        class="bg-gradient-to-b from-transparent via-background/75 to-background h-16 w-full"
+      >
+      </div>
+      <a
+        href="https://github.com/AirOne01"
+        aria-label="GitHub logo"
+        class="bg-background pb-1 w-full flex justify-center items-center"
+      >
+        <Button variant="outline" size="icon">
+          <Icon class="w-[1.2rem] h-[1.2rem]" name="tabler:brand-github" />
+        </Button>
+      </a>
+    </section>
+  </nav>
+</header>

@@ -1,0 +1,21 @@
+{
+  "name": "silo",
+  "module": "index.ts",
+  "type": "module",
+  "private": "true",
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "dev": "bun run ./packages/cli/index.ts --"
+  },
+  "dependencies": {
+    "xo": "^0.59.3"
+  }
+}
