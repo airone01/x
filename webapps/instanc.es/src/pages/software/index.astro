@@ -1,0 +1,26 @@
+---
+import { getCollection } from "astro:content";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Layout from "@/layouts/Layout.astro";
+import Main from "@/layouts/Main.astro";
+import { SITE } from "@/config";
+
+const softwareList = await getCollection("software");
+---
+<Layout title={`Software | ${SITE.title}`}>
+  <Header />
+  <Main pageTitle="Software Directory" pageDesc="Browse decentralized mirrors and instances by software.">
+    <ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 mt-8">
+      {softwareList.map(soft => (
+        <li class="rounded-lg border border-border bg-muted/20 p-6 transition-all hover:bg-muted/40">
+          <a href={`/software/${soft.id}`} class="block focus-visible:no-underline">
+            <h2 class="text-2xl font-bold text-accent decoration-dashed underline-offset-4 hover:underline">{soft.data.title}</h2>
+            <p class="mt-2 text-foreground/80">{soft.data.description}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </Main>
+  <Footer />
+</Layout>
