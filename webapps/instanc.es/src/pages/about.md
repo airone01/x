@@ -1,37 +1,27 @@
 ---
 layout: ../layouts/AboutLayout.astro
-title: "About"
+title: "About Instanc.es"
 ---
 
-AstroPaper is a minimal, accessible and SEO-friendly blog theme built with [Astro](https://astro.build/) and [Tailwind CSS](https://tailwindcss.com/).
+**Instanc.es** is an automated directory designed to help users thrive in the
+self-hosted and decentralized space.
 
-![Astro Paper](public/astropaper-og.jpg)
+Finding reliable instances of privacy-respecting software like Invidious or
+SearXNG can be difficult. This project solves that by automatically scraping
+official APIs, monitoring server health, and presenting active mirrors in one
+easily searchable location.
 
-AstroPaper provides a solid foundation for blogs, or even portfolios\_ with full markdown support, built-in dark mode, and a clean layout that works out-of-the-box.
+## How it works
 
-The blog posts in this theme also serve as guides, docs or example articles\_ making AstroPaper a flexible starting point for your next content-driven site.
+Our scrapers run continuously to verify that the instances listed are actually
+online and responsive. We currently track:
 
-## Features
+- Invidious
+- Arch Linux Mirrors
+- _(And more coming soon!)_
 
-AstroPaper comes with a set of useful features that make content publishing easy and effective:
+## Open Source
 
-- SEO-friendly
-- Fast performance
-- Light & dark mode
-- Highly customizable
-- Organizable blog posts
-- Responsive & accessible
-- Static search with [PageFind](https://pagefind.app/)
-- Automatic social image generation
-
-and so much more.
-
-## Show your support
-
-If you like [AstroPaper](https://github.com/satnaing/astro-paper), consider giving it a star ⭐️.
-
-Found a bug 🐛 or have an improvement ✨ in mind? Feel free to open an [issue](https://github.com/satnaing/astro-paper/issues), submit a [pull request](https://github.com/satnaing/astro-paper/pulls) or start a [discussion](https://github.com/satnaing/astro-paper/discussions).
-
-If you find this theme helpful, you can also [sponsor me on GitHub](https://github.com/sponsors/satnaing) or [buy me a coffee](https://buymeacoffee.com/satnaing) to show your support — every penny counts.
-
-Kyay zuu! 🙏🏼
+The data aggregated on this site is licensed under CC BY-SA 4.0, and the source
+code of this site under GNU AGPL 3.0. If you want to contribute a new scraper or
+improve the site, check out our repository!
