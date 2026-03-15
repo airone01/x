@@ -1,0 +1,85 @@
+---
+export interface Props {
+  software: string;
+  url: string;
+  status: string;
+  region: string;
+  network?: string;
+  users?: number;
+}
+
+const {
+  software,
+  url,
+  status,
+  region,
+  network = "Clearnet",
+  users,
+} = Astro.props;
+
+const statusLower = status.toLowerCase();
+const statusColor =
+  statusLower === "online"
+    ? "text-green-700 bg-green-100 dark:bg-green-900/40 dark:text-green-400 border border-green-200 dark:border-green-800"
+    : statusLower === "degraded"
+      ? "text-yellow-700 bg-yellow-100 dark:bg-yellow-900/40 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800"
+      : "text-red-700 bg-red-100 dark:bg-red-900/40 dark:text-red-400 border border-red-200 dark:border-red-800";
+
+const networkLower = network.toLowerCase();
+const networkColor =
+  networkLower === "tor" || networkLower === "onion"
+    ? "text-purple-700 bg-purple-100 dark:bg-purple-900/40 dark:text-purple-400 border border-purple-200 dark:border-purple-800"
+    : networkLower === "i2p"
+      ? "text-blue-700 bg-blue-100 dark:bg-blue-900/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800"
+      : "text-gray-700 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700";
+
+// Region parser: Safely handles "US", "FR" into full names + Emoji Flags
+let regionName = region;
+let flag = "🌐";
+
+if (region && region.length === 2) {
+  try {
+    const regionUpper = region.toUpperCase();
+    regionName =
+      new Intl.DisplayNames(["en"], { type: "region" }).of(regionUpper) ||
+      region;
+
+    const codePoints = regionUpper
+      .split("")
+      .map((char) => 127397 + char.charCodeAt(0));
+    flag = String.fromCodePoint(...codePoints);
+  } catch (_e: unknown) {}
+}
+---
+
+<div class="my-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 p-6 shadow-sm">
+  <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+    <div class="flex items-center gap-3">
+      <h3 class="my-0! text-xl font-bold">{software}</h3>
+      <span class={`px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md ${networkColor}`}>
+        {network}
+      </span>
+    </div>
+    <span class={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full ${statusColor}`}>
+      {status}
+    </span>
+  </div>
+  
+  <ul class="my-0! pl-0! list-none space-y-3 text-sm">
+    <li class="flex items-center gap-2">
+      <strong class="text-gray-700 dark:text-gray-300">URL:</strong> 
+      <a href={url} target="_blank" rel="noopener noreferrer" class="text-skin-accent hover:underline break-all">{url}</a>
+    </li>
+    <li class="flex items-center gap-2">
+      <strong class="text-gray-700 dark:text-gray-300">Location:</strong> 
+      <span>{flag} {regionName} {region && region.length === 2 ? `(${region.toUpperCase()})` : ''}</span>
+    </li>
+    {users !== undefined && users !== null && (
+      <li class="flex items-center gap-2">
+        <strong class="text-gray-700 dark:text-gray-300">Active Users:</strong> 
+        <span>{users.toLocaleString()}</span>
+      </li>
+    )}
+  </ul>
+</div>
+
