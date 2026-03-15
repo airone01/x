@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/airone01/x/compare/instanc.es-v1.3.0...instanc.es-v1.4.0) (2026-03-15)
+
+
+### Features
+
+* **webapps/instanc.es:** branding ([#12](https://github.com/airone01/x/issues/12)) ([7b251bc](https://github.com/airone01/x/commit/7b251bc688039565aa78c0d700a53a52e27bd015))
+
 ## [1.3.0](https://github.com/airone01/x/compare/instanc.es-v1.2.0...instanc.es-v1.3.0) (2026-03-15)
 
 
