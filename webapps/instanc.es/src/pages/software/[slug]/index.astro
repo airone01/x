@@ -1,0 +1,65 @@
+---
+import { type CollectionEntry, getCollection, render } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Main from "@/layouts/Main.astro";
+import Card from "@/components/Card.astro";
+import { SITE } from "@/config";
+import IconGitHub from "@/assets/icons/IconGitHub.svg";
+
+export async function getStaticPaths() {
+  const softwareEntries = await getCollection("software");
+  const instances = await getCollection("instances", ({ data }) => !data.draft);
+
+  return softwareEntries.map((software) => {
+    const softwareInstances = instances.filter((instance) =>
+      instance.data.tags.includes(software.id),
+    );
+
+    return {
+      params: { slug: software.id },
+      props: { software, softwareInstances },
+    };
+  });
+}
+
+const { software, softwareInstances } = Astro.props;
+const { Content } = await render(software);
+---
+<Layout title={`${software.data.title} Instances | ${SITE.title}`}>
+  <Header />
+  <Main 
+    pageTitle={software.data.title} 
+    pageDesc={software.data.description}
+  >
+    <div class="mb-8 flex flex-wrap gap-4">
+      <a href={software.data.website} target="_blank" rel="noopener noreferrer" class="rounded bg-accent px-4 py-2 font-medium text-skin-inverted hover:opacity-90">
+        Official Website
+      </a>
+      {software.data.github && (
+        <a href={software.data.github} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 rounded border border-border px-4 py-2 font-medium hover:bg-muted/50">
+          <IconGitHub class="size-5" /> GitHub
+        </a>
+      )}
+    </div>
+
+    <article class="app-prose max-w-none border-b border-border pb-8">
+      <Content />
+    </article>
+
+    <div class="mt-12">
+      <h2 class="mb-6 text-2xl font-bold">Available Instances <span class="text-foreground/50 text-lg">({softwareInstances.length})</span></h2>
+      {softwareInstances.length > 0 ? (
+        <ul>
+          {softwareInstances.map(instance => (
+            <Card {...instance} />
+          ))}
+        </ul>
+      ) : (
+        <p class="italic text-foreground/70">No instances are currently tracked for this software.</p>
+      )}
+    </div>
+  </main>
+  <Footer />
+</Layout>
