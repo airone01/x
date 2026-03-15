@@ -43,6 +43,18 @@ type InvidiousResponseItem =
   | [string, InvidiousInstanceDetails]
   | InvidiousInstanceDetails;
 
+interface ArchLinuxMirror {
+  url: string;
+  protocol: string;
+  completion_pct: number;
+  delay: number;
+  country_code: string;
+}
+interface ArchLinuxResponse {
+  version: number;
+  urls: ArchLinuxMirror[];
+}
+
 // setup
 
 const logger = pino({
@@ -69,11 +81,12 @@ function writeMdx(
   region: string,
   network: NetworkType,
   users?: number,
+  exactUrl?: string, // for support of mirrors with subdirs
 ): "created" | "updated" | "skipped" {
   const slug = `${software.toLowerCase()}-${domain.replace(/\./g, "-")}`;
   const filePath = path.join(OUTPUT_DIR, `${slug}.mdx`);
 
-  const instanceData = { domain, status, region, network, users };
+  const instanceData = { domain, status, region, network, users, exactUrl };
   const dataHash = JSON.stringify(instanceData);
 
   let pubDatetime = new Date().toISOString();
@@ -105,7 +118,8 @@ function writeMdx(
     modDatetime = new Date().toISOString();
   }
 
-  const protocol = network === "Clearnet" ? "https://" : "http://";
+  const urlToUse =
+    exactUrl || `${network === "Clearnet" ? "https://" : "http://"}${domain}`;
 
   const frontmatter = [
     `---`,
@@ -128,13 +142,13 @@ import InstanceInfo from "@/components/InstanceInfo.astro";
 
 <InstanceInfo 
   software="${software}"
-  url="${protocol}${domain}"
+  url="${urlToUse}"
   status="${status}"
   region="${region}"
   network="${network}"
   ${users !== undefined ? `users={${users}}` : ""}
 />
-`.replace(/\n\n+/g, "\n\n"); // Enforce clean spacing
+`.replace(/\n\n+/g, "\n\n"); // enforce clean spacing
 
   if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -212,6 +226,70 @@ const scrapers: Record<string, ScraperFn> = {
         region,
         network,
         users,
+      );
+
+      stats[result]++;
+    }
+    return stats;
+  },
+
+  archlinux: async (): Promise<ScraperStats> => {
+    logger.info("Fetching from archlinux.org...");
+    const API_URL = "https://archlinux.org/mirrors/status/json/"; //
+
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error(`API returned status: ${res.status}`);
+
+    const data = (await res.json()) as ArchLinuxResponse;
+    const mirrors = data.urls;
+    logger.info(`Fetched ${mirrors.length} total Arch Linux mirrors.`);
+
+    const stats: ScraperStats = {
+      created: 0,
+      updated: 0,
+      skipped: 0,
+      rejected: 0,
+    };
+
+    for (const mirror of mirrors) {
+      // arch mirror list includes http and rsync
+      // we only process https
+      if (mirror.protocol !== "https") {
+        stats.rejected++;
+        continue;
+      }
+
+      let domain = "";
+      try {
+        const urlObj = new URL(mirror.url);
+        domain = urlObj.hostname;
+      } catch {
+        stats.rejected++;
+        continue;
+      }
+
+      const network: NetworkType = "Clearnet";
+
+      // calculate health based on completion percentage and synchronization delay
+      let status: StatusType = "Online";
+      if (mirror.completion_pct < 0.98 || mirror.delay > 86400) {
+        status = "Degraded";
+      }
+      if (mirror.completion_pct < 0.8) {
+        status = "Offline";
+      }
+
+      const region = mirror.country_code || "Unknown";
+
+      const result = writeMdx(
+        "archlinux",
+        domain,
+        ["archlinux", "linux", "package-manager", "mirror"],
+        status,
+        region,
+        network,
+        undefined,
+        mirror.url,
       );
 
       stats[result]++;
