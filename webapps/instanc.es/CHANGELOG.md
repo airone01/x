@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/airone01/x/compare/instanc.es-v1.5.0...instanc.es-v1.6.0) (2026-03-16)
+
+
+### Features
+
+* **webapps/instanc.es:** searxng ([#16](https://github.com/airone01/x/issues/16)) ([64b4493](https://github.com/airone01/x/commit/64b449365ba76681fc50c37884ec9d8ba1ac6f94))
+
 ## [1.5.0](https://github.com/airone01/x/compare/instanc.es-v1.4.0...instanc.es-v1.5.0) (2026-03-16)
 
 

@@ -16,7 +16,7 @@
   "scraping/gbscraper": "1.0.0",
   "scraping/gbscraper_old": "1.0.0",
   "system_tooling/isod": "1.0.0",
-  "webapps/instanc.es": "1.5.0",
+  "webapps/instanc.es": "1.6.0",
   "packaging/celeste_flake": "1.0.0",
   "theming/zmono": "1.1.0",
   "packaging/snowblock": "1.0.0"
