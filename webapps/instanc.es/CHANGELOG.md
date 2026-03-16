@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/airone01/x/compare/instanc.es-v1.4.0...instanc.es-v1.5.0) (2026-03-16)
+
+
+### Features
+
+* **webapps/instanc.es:** shadcn ([#14](https://github.com/airone01/x/issues/14)) ([0e90c20](https://github.com/airone01/x/commit/0e90c2003e615a470e9c8d12c4de33b36d25b086))
+
 ## [1.4.0](https://github.com/airone01/x/compare/instanc.es-v1.3.0...instanc.es-v1.4.0) (2026-03-15)
 
 
