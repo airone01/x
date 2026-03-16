@@ -1,20 +1,39 @@
 ---
 import type { HTMLAttributes } from "astro/types";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-type Props = { disabled?: boolean } & HTMLAttributes<"a">;
+type Props = {
+  disabled?: boolean;
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
+  size?: "default" | "sm" | "lg" | "icon";
+} & HTMLAttributes<"a">;
 
-const { disabled, class: className, ...attrs } = Astro.props;
+const {
+  disabled,
+  variant = "link",
+  size = "default",
+  class: className,
+  ...attrs
+} = Astro.props;
 
 const Button = disabled ? "span" : "a";
 ---
 
 <Button
   aria-disabled={disabled}
-  class:list={[
-    "group inline-flex items-center gap-1",
-    { "hover:text-accent": !disabled },
-    className,
-  ]}
+  class={cn(
+    buttonVariants({ variant, size }),
+    "group gap-1",
+    disabled && "pointer-events-none opacity-50",
+    className
+  )}
   {...attrs}
 >
   <slot />
