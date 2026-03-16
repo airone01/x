@@ -86,7 +86,14 @@ function writeMdx(
   const slug = `${software.toLowerCase()}-${domain.replace(/\./g, "-")}`;
   const filePath = path.join(OUTPUT_DIR, `${slug}.mdx`);
 
-  const instanceData = { domain, status, region, network, users, exactUrl };
+  const instanceData = {
+    domain,
+    status,
+    region,
+    network,
+    users,
+    exactUrl,
+  };
   const dataHash = JSON.stringify(instanceData);
 
   let pubDatetime = new Date().toISOString();
@@ -290,6 +297,75 @@ const scrapers: Record<string, ScraperFn> = {
         network,
         undefined,
         mirror.url,
+      );
+
+      stats[result]++;
+    }
+    return stats;
+  },
+
+  searxng: async (): Promise<ScraperStats> => {
+    logger.info("Fetching from searx.space...");
+    const API_URL = "https://searx.space/data/instances.json";
+
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error(`API returned status: ${res.status}`);
+
+    const data = (await res.json()) as {
+      instances: Record<string, any>;
+    };
+    const instances = data.instances;
+    const instanceUrls = Object.keys(instances);
+    logger.info(`Fetched ${instanceUrls.length} total SearXNG instances.`);
+
+    const stats: ScraperStats = {
+      created: 0,
+      updated: 0,
+      skipped: 0,
+      rejected: 0,
+    };
+
+    for (const url of instanceUrls) {
+      const details = instances[url];
+
+      let domain = "";
+      try {
+        const urlObj = new URL(url);
+        domain = urlObj.hostname;
+      } catch {
+        stats.rejected++;
+        continue;
+      }
+
+      let network: NetworkType = "Clearnet";
+      if (details.network_type === "tor" || domain.endsWith(".onion")) {
+        network = "Tor";
+      } else if (details.network_type === "i2p" || domain.endsWith(".i2p")) {
+        network = "I2P";
+      }
+
+      let status: StatusType = "Online";
+      const grade = details.html?.grade;
+
+      if (grade === "F" || details.error) {
+        status = "Offline";
+      } else if (grade === "C" || grade === "D" || grade === "V") {
+        status = "Degraded";
+      } else if (!grade) {
+        status = "Unknown";
+      }
+
+      const region = "Unknown";
+
+      const result = writeMdx(
+        "SearXNG",
+        domain,
+        ["searxng", "search", "privacy"],
+        status,
+        region,
+        network,
+        undefined,
+        url,
       );
 
       stats[result]++;
