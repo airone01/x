@@ -1,5 +1,7 @@
 ---
 import IconHash from "@/assets/icons/IconHash.svg";
+import { badgeVariants } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 type Props = {
   tag: string;
@@ -14,22 +16,13 @@ const { tag, tagName, size = "lg" } = Astro.props;
   <a
     href={`/tags/${tag}/`}
     transition:name={tag}
-    class:list={[
-      "flex items-center gap-0.5",
-      "border-b-2 border-dashed border-foreground",
-      "hover:-mt-0.5 hover:border-accent hover:text-accent",
-      "focus-visible:border-none focus-visible:text-accent",
-      { "text-sm": size === "sm" },
-      { "text-lg": size === "lg" },
-    ]}
+    class={cn(
+      badgeVariants({ variant: "secondary" }),
+      "flex items-center gap-1 hover:bg-secondary/80 transition-colors focus-visible:no-underline",
+      size === "lg" ? "text-sm py-1 px-3" : "text-xs py-0.5 px-2"
+    )}
   >
-    <IconHash
-      class:list={[
-        "opacity-80",
-        { "size-5": size === "lg" },
-        { "size-4": size === "sm" },
-      ]}
-    />
+    <IconHash class={cn("opacity-70", size === "lg" ? "size-4" : "size-3")} />
     {tagName}
   </a>
 </li>

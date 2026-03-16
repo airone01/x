@@ -7,6 +7,7 @@ import Main from "@/layouts/Main.astro";
 import Card from "@/components/Card.astro";
 import { SITE } from "@/config";
 import IconGitHub from "@/assets/icons/IconGitHub.svg";
+import { Button } from "@/components/ui/button";
 
 export async function getStaticPaths() {
   const softwareEntries = await getCollection("software");
@@ -34,12 +35,16 @@ const { Content } = await render(software);
     pageDesc={software.data.description}
   >
     <div class="mb-8 flex flex-wrap gap-4">
-      <a href={software.data.website} target="_blank" rel="noopener noreferrer" class="rounded bg-accent px-4 py-2 font-medium text-skin-inverted hover:opacity-90">
+      <a href={software.data.website} target="_blank" rel="noopener noreferrer">
+      <Button>
         Official Website
+      </Button>
       </a>
       {software.data.github && (
-        <a href={software.data.github} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 rounded border border-border px-4 py-2 font-medium hover:bg-muted/50">
+        <a href={software.data.github} target="_blank" rel="noopener noreferrer">
+      <Button variant="outline">
           <IconGitHub class="size-5" /> GitHub
+      </Button>
         </a>
       )}
     </div>
