@@ -1,7 +1,0 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
-
-.xterm .composition-view {
-    background: #0A0A0A;
-}
