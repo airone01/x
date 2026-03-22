@@ -28,21 +28,6 @@
     "packaging/snowblock": {
       "release-type": "simple"
     },
-    "portfolios/portfolio": {
-      "release-type": "simple"
-    },
-    "portfolios/portfolio2": {
-      "release-type": "simple"
-    },
-    "portfolios/portfolio3": {
-      "release-type": "simple"
-    },
-    "portfolios/portfolio4": {
-      "release-type": "simple"
-    },
-    "portfolios/portfolio5-svelte": {
-      "release-type": "node"
-    },
     "scraping/gbscraper": {
       "release-type": "simple"
     },
